@@ -9,3 +9,5 @@ export { EmailList } from "./ui/EmailList";
 export type { EmailListProps } from "./ui/EmailList";
 export { EmailListSection } from "./ui/EmailListSection";
 export type { EmailListSectionProps } from "./ui/EmailListSection";
+export { getHighlightSegments } from "./utils/highlightText";
+export type { HighlightSegment } from "./utils/highlightText";
