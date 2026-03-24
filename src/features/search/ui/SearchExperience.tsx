@@ -1,5 +1,6 @@
 import { useId, useMemo, useState, type KeyboardEvent } from "react";
 import type { SearchSuggestion } from "@/features/search/data/getSearchSuggestions";
+import { useSearchHistory } from "@/features/search/logic/useSearchHistory";
 import { useSearchSuggestions } from "@/features/search/logic/useSearchSuggestions";
 import { SearchBar } from "@/features/search/ui/SearchBar";
 import { Suggestions } from "@/features/search/ui/Suggestions";
@@ -109,6 +110,7 @@ export function SearchExperience() {
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<SearchSuggestion | null>(null);
 
+  const { history, recordSearch } = useSearchHistory();
   const { suggestions, isLoading, error } = useSearchSuggestions(query);
   const suggestionsListId = useId();
   const optionIdPrefix = useId();
@@ -137,6 +139,17 @@ export function SearchExperience() {
     setSelectedSuggestion(suggestion);
   };
 
+  const handleSearch = (trimmedQuery: string) => {
+    setQuery(trimmedQuery);
+    recordSearch(trimmedQuery);
+  };
+
+  const handleHistoryPick = (term: string) => {
+    setQuery(term);
+    setSelectedSuggestion(null);
+    recordSearch(term);
+  };
+
   return (
     <section className="search-experience" aria-label="Email search">
       <p className="search-experience__hint">
@@ -144,11 +157,35 @@ export function SearchExperience() {
         keyboard or click to choose a contact.
       </p>
 
+      {history.length > 0 ? (
+        <div className="search-experience__history">
+          <p className="search-experience__history-label" id="search-recent-label">
+            Recent searches
+          </p>
+          <ul
+            className="search-experience__history-list"
+            aria-labelledby="search-recent-label"
+          >
+            {history.map((term) => (
+              <li key={term}>
+                <button
+                  type="button"
+                  className="search-experience__history-chip"
+                  onClick={() => handleHistoryPick(term)}
+                >
+                  {term}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <SearchBarWithSuggestions
         key={suggestionSig}
         query={query}
         onQueryChange={handleQueryChange}
-        onSearch={setQuery}
+        onSearch={handleSearch}
         label="Search emails"
         placeholder="Try “Alex” or “@company.com”"
         suggestionsListId={suggestionsListId}

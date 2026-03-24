@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchExperience } from "@/features/search/ui/SearchExperience";
 
 const useSearchSuggestionsMock = vi.fn();
@@ -9,6 +9,10 @@ vi.mock("@/features/search/logic/useSearchSuggestions", () => ({
 }));
 
 describe("SearchExperience", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("passes current input query to useSearchSuggestions", () => {
     useSearchSuggestionsMock.mockReturnValue({
       suggestions: [],
