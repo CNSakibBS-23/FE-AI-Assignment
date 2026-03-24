@@ -6,7 +6,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Email Search",
+      "Find the right email, faster",
     );
   });
 });

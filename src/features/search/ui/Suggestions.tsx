@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useId,
   useState,
   type KeyboardEvent,
@@ -14,20 +13,39 @@ type SuggestionsProps = {
   ariaLabel?: string;
   /** Optional id for aria-labelledby if you use a visible heading instead. */
   labelledBy?: string;
+  /** Root element id (for `aria-controls` on the search input). */
+  id?: string;
 };
 
-export function Suggestions({
+function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    const a = parts[0]?.[0];
+    const b = parts[parts.length - 1]?.[0];
+    return `${a ?? ""}${b ?? ""}`.toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+type SuggestionsListInnerProps = {
+  suggestions: SearchSuggestion[];
+  onSelect?: (suggestion: SearchSuggestion) => void;
+  ariaLabel: string;
+  labelledBy?: string;
+  listboxId: string;
+};
+
+function SuggestionsListInner({
   suggestions,
   onSelect,
-  ariaLabel = "Search suggestions",
+  ariaLabel,
   labelledBy,
-}: SuggestionsProps) {
+  listboxId,
+}: SuggestionsListInnerProps) {
   const baseId = useId();
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-
-  useEffect(() => {
-    setSelectedIndex(suggestions.length > 0 ? 0 : -1);
-  }, [suggestions]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const moveHighlight = useCallback(
     (delta: number) => {
@@ -69,41 +87,80 @@ export function Suggestions({
     }
   };
 
+  return (
+    <div className="search-suggestions-wrap">
+      <div
+        id={listboxId}
+        role="listbox"
+        tabIndex={0}
+        aria-label={labelledBy ? undefined : ariaLabel}
+        aria-labelledby={labelledBy}
+        onKeyDown={handleKeyDown}
+        className="search-suggestions"
+      >
+        {suggestions.map((suggestion, index) => {
+          const optionId = `${baseId}-option-${suggestion.id}`;
+          const isSelected = index === selectedIndex;
+
+          return (
+            <div
+              key={suggestion.id}
+              id={optionId}
+              role="option"
+              aria-selected={isSelected}
+              className={
+                isSelected
+                  ? "search-suggestions__option is-active"
+                  : "search-suggestions__option"
+              }
+              onMouseEnter={() => setSelectedIndex(index)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onSelect?.(suggestion);
+              }}
+            >
+              <span className="search-suggestions__avatar" aria-hidden>
+                {getInitials(suggestion.name)}
+              </span>
+              <span className="search-suggestions__body">
+                <span className="search-suggestions__name">{suggestion.name}</span>
+                <span className="search-suggestions__email">{suggestion.email}</span>
+              </span>
+            </div>
+          );
+        })}
+        <p className="search-suggestions__kbd">
+          <kbd>↑</kbd>
+          <kbd>↓</kbd> to move · <kbd>Enter</kbd> to select
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function Suggestions({
+  suggestions,
+  onSelect,
+  ariaLabel = "Search suggestions",
+  labelledBy,
+  id: idProp,
+}: SuggestionsProps) {
+  const reactId = useId();
+  const listboxId = idProp ?? `search-suggestions-${reactId}`;
+  const listKey = suggestions.map((s) => s.id).join("|");
+
   if (suggestions.length === 0) {
     return null;
   }
 
   return (
-    <div
-      role="listbox"
-      tabIndex={0}
-      aria-label={labelledBy ? undefined : ariaLabel}
-      aria-labelledby={labelledBy}
-      onKeyDown={handleKeyDown}
-      className="search-suggestions"
-    >
-      {suggestions.map((suggestion, index) => {
-        const optionId = `${baseId}-option-${suggestion.id}`;
-        const isSelected = index === selectedIndex;
-
-        return (
-          <div
-            key={suggestion.id}
-            id={optionId}
-            role="option"
-            aria-selected={isSelected}
-            className={isSelected ? "search-suggestions__option is-active" : "search-suggestions__option"}
-            onMouseEnter={() => setSelectedIndex(index)}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onSelect?.(suggestion);
-            }}
-          >
-            <span className="search-suggestions__name">{suggestion.name}</span>
-            <span className="search-suggestions__email">{suggestion.email}</span>
-          </div>
-        );
-      })}
-    </div>
+    <SuggestionsListInner
+      key={listKey}
+      suggestions={suggestions}
+      onSelect={onSelect}
+      ariaLabel={ariaLabel}
+      labelledBy={labelledBy}
+      listboxId={listboxId}
+    />
   );
 }

@@ -29,6 +29,10 @@ describe("SearchExperience", () => {
       if (!query.trim()) {
         return { suggestions: [], isLoading: false, error: null };
       }
+      // After picking a suggestion, the query becomes an email — hide list like a real match would.
+      if (query.includes("@")) {
+        return { suggestions: [], isLoading: false, error: null };
+      }
 
       return {
         suggestions: [{ id: "1", name: "Alex", email: "alex@example.com" }],
@@ -48,6 +52,8 @@ describe("SearchExperience", () => {
     expect(screen.getByRole("searchbox", { name: "Search emails" })).toHaveValue(
       "alex@example.com",
     );
-    expect(screen.getByText("Selected: Alex (alex@example.com)")).toBeInTheDocument();
+    expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByText("alex@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Contact selected")).toBeInTheDocument();
   });
 });
