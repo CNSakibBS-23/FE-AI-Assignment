@@ -10,6 +10,14 @@ Primary feature modules:
 - `labels`: label retrieval/management and filter integration.
 - `insights`: search quality and assistant-like recommendation panels.
 
+## Email Module
+
+- **EmailList** — List container, empty state, and wiring for filtered rows.
+- **EmailItem** — Single row: subject, sender, preview, and flag button.
+- **Email API** — Data access via `getEmails` and mock inbox payloads (`email/data`).
+- **Filtering logic** — `useEmails` applies the search string to subject, sender, and body.
+- **Flagging system** — Per-message flag state in `useEmails` (toggle and list updates).
+
 ## Internal Module Structure
 
 Each feature follows:

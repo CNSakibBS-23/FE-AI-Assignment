@@ -8,6 +8,11 @@
 4. `search/data` executes API request, validates DTO, maps to domain model.
 5. UI receives view-model and renders list, empty, or error states.
 
+## Search and Inbox Workflow
+
+1. User types → debounced suggestions load → user selects a suggestion (or keeps typing) → search query updates → email list filters to matching messages.
+2. User clicks flag → flagged state toggles in `useEmails` → list re-renders; flags persist for the session (client state until reload).
+
 ## Email Detail Workflow
 
 1. User opens a search result item.
