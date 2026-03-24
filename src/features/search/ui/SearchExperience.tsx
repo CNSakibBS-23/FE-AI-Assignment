@@ -1,9 +1,18 @@
-import { useId, useMemo, useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 import type { SearchSuggestion } from "@/features/search/data/getSearchSuggestions";
-import { useSearchHistory } from "@/features/search/logic/useSearchHistory";
-import { useSearchSuggestions } from "@/features/search/logic/useSearchSuggestions";
+import { useSearchExperience } from "@/features/search/logic/useSearchExperience";
 import { SearchBar } from "@/features/search/ui/SearchBar";
 import { Suggestions } from "@/features/search/ui/Suggestions";
+
+type SearchExperienceContext = {
+  /** Current search box value; drives directory suggestions and downstream filters (e.g. email list). */
+  query: string;
+};
+
+type SearchExperienceProps = {
+  /** Inbox, lists, etc. consume `query` without importing suggestion internals. */
+  children?: (ctx: SearchExperienceContext) => ReactNode;
+};
 
 type SearchBarWithSuggestionsProps = {
   query: string;
@@ -105,50 +114,24 @@ function SearchBarWithSuggestions({
   );
 }
 
-export function SearchExperience() {
-  const [query, setQuery] = useState("");
-  const [selectedSuggestion, setSelectedSuggestion] =
-    useState<SearchSuggestion | null>(null);
-
-  const { history, recordSearch } = useSearchHistory();
-  const { suggestions, isLoading, error } = useSearchSuggestions(query);
-  const suggestionsListId = useId();
-  const optionIdPrefix = useId();
-
-  const hasQuery = query.trim().length > 0;
-  const visibleSuggestions = useMemo(
-    () => (hasQuery ? suggestions : []),
-    [hasQuery, suggestions],
-  );
-
-  const suggestionSig = useMemo(
-    () => visibleSuggestions.map((s) => s.id).join("|"),
-    [visibleSuggestions],
-  );
-
-  const showNoResults =
-    hasQuery && !isLoading && !error && visibleSuggestions.length === 0;
-
-  const handleQueryChange = (nextQuery: string) => {
-    setQuery(nextQuery);
-    setSelectedSuggestion(null);
-  };
-
-  const handleSuggestionSelect = (suggestion: SearchSuggestion) => {
-    setQuery(suggestion.email);
-    setSelectedSuggestion(suggestion);
-  };
-
-  const handleSearch = (trimmedQuery: string) => {
-    setQuery(trimmedQuery);
-    recordSearch(trimmedQuery);
-  };
-
-  const handleHistoryPick = (term: string) => {
-    setQuery(term);
-    setSelectedSuggestion(null);
-    recordSearch(term);
-  };
+export function SearchExperience({ children }: SearchExperienceProps) {
+  const {
+    query,
+    selectedSuggestion,
+    history,
+    isLoading,
+    error,
+    visibleSuggestions,
+    suggestionSig,
+    showNoResults,
+    hasQuery,
+    suggestionsListId,
+    optionIdPrefix,
+    handleQueryChange,
+    handleSuggestionSelect,
+    handleSearch,
+    handleHistoryPick,
+  } = useSearchExperience();
 
   return (
     <section className="search-experience" aria-label="Email search">
@@ -225,6 +208,8 @@ export function SearchExperience() {
           </span>
         </div>
       ) : null}
+
+      {children ? <div className="search-experience__below">{children({ query })}</div> : null}
     </section>
   );
 }

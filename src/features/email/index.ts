@@ -7,3 +7,5 @@ export { EmailItem } from "./ui/EmailItem";
 export type { EmailItemProps } from "./ui/EmailItem";
 export { EmailList } from "./ui/EmailList";
 export type { EmailListProps } from "./ui/EmailList";
+export { EmailListSection } from "./ui/EmailListSection";
+export type { EmailListSectionProps } from "./ui/EmailListSection";

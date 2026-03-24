@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SearchExperience } from "@/features/search/ui/SearchExperience";
+import { SearchExperience } from "@/features/search";
 
 const useSearchSuggestionsMock = vi.fn();
 
