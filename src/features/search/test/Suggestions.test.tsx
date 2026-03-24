@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Suggestions } from "@/features/search/ui/Suggestions";
 
@@ -9,9 +10,30 @@ const sample = [
   { id: "3", name: "Casey", email: "casey@example.com" },
 ];
 
+const OPTION_PREFIX = "test-opt-prefix";
+
+function SuggestionsHarness(
+  props: Partial<ComponentProps<typeof Suggestions>> & {
+    suggestions?: typeof sample;
+  },
+) {
+  const { suggestions = sample, ...rest } = props;
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  return (
+    <Suggestions
+      suggestions={suggestions}
+      highlightedIndex={highlightedIndex}
+      onHighlightChange={setHighlightedIndex}
+      optionIdPrefix={OPTION_PREFIX}
+      {...rest}
+    />
+  );
+}
+
 describe("Suggestions", () => {
   it("renders a listbox with one option per suggestion", () => {
-    render(<Suggestions suggestions={sample} />);
+    render(<SuggestionsHarness />);
 
     const listbox = screen.getByRole("listbox", { name: "Search suggestions" });
     expect(listbox).toBeInTheDocument();
@@ -20,13 +42,13 @@ describe("Suggestions", () => {
   });
 
   it("returns null when there are no suggestions", () => {
-    const { container } = render(<Suggestions suggestions={[]} />);
+    const { container } = render(<SuggestionsHarness suggestions={[]} />);
     expect(container.firstChild).toBeNull();
   });
 
   it("highlights the first item by default and moves highlight with arrow keys", async () => {
     const user = userEvent.setup();
-    render(<Suggestions suggestions={sample} />);
+    render(<SuggestionsHarness />);
 
     const listbox = screen.getByRole("listbox");
     listbox.focus();
@@ -45,7 +67,7 @@ describe("Suggestions", () => {
 
   it("clamps highlight at list boundaries", async () => {
     const user = userEvent.setup();
-    render(<Suggestions suggestions={sample} />);
+    render(<SuggestionsHarness />);
 
     const listbox = screen.getByRole("listbox");
     listbox.focus();
@@ -61,7 +83,7 @@ describe("Suggestions", () => {
   it("calls onSelect with the highlighted suggestion on Enter", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<Suggestions suggestions={sample} onSelect={onSelect} />);
+    render(<SuggestionsHarness onSelect={onSelect} />);
 
     screen.getByRole("listbox").focus();
 
@@ -72,7 +94,7 @@ describe("Suggestions", () => {
 
   it("updates highlight when hovering an option", async () => {
     const user = userEvent.setup();
-    render(<Suggestions suggestions={sample} />);
+    render(<SuggestionsHarness />);
 
     const options = screen.getAllByRole("option");
     await user.hover(options[2]);

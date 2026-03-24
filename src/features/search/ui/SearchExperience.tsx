@@ -1,15 +1,117 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type KeyboardEvent } from "react";
 import type { SearchSuggestion } from "@/features/search/data/getSearchSuggestions";
 import { useSearchSuggestions } from "@/features/search/logic/useSearchSuggestions";
 import { SearchBar } from "@/features/search/ui/SearchBar";
 import { Suggestions } from "@/features/search/ui/Suggestions";
 
+type SearchBarWithSuggestionsProps = {
+  query: string;
+  onQueryChange: (query: string) => void;
+  onSearch: (query: string) => void;
+  label: string;
+  placeholder: string;
+  suggestionsListId: string;
+  optionIdPrefix: string;
+  visibleSuggestions: SearchSuggestion[];
+  onSuggestionSelect: (suggestion: SearchSuggestion) => void;
+};
+
+/**
+ * Owns highlight index for the list + input keyboard handling. Remount when
+ * `key` (suggestion list identity) changes so the highlight resets without an effect.
+ */
+function SearchBarWithSuggestions({
+  query,
+  onQueryChange,
+  onSearch,
+  label,
+  placeholder,
+  suggestionsListId,
+  optionIdPrefix,
+  visibleSuggestions,
+  onSuggestionSelect,
+}: SearchBarWithSuggestionsProps) {
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  const suggestionsOpen = visibleSuggestions.length > 0;
+
+  const safeHighlightedIndex =
+    visibleSuggestions.length === 0
+      ? 0
+      : Math.max(0, Math.min(highlightedIndex, visibleSuggestions.length - 1));
+
+  const activeDescendantId =
+    suggestionsOpen && visibleSuggestions[safeHighlightedIndex]
+      ? `${optionIdPrefix}-opt-${visibleSuggestions[safeHighlightedIndex].id}`
+      : undefined;
+
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!suggestionsOpen || visibleSuggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedIndex((i) =>
+        Math.min(i + 1, visibleSuggestions.length - 1),
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedIndex((i) => Math.max(i - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const idx = Math.max(
+        0,
+        Math.min(highlightedIndex, visibleSuggestions.length - 1),
+      );
+      const pick = visibleSuggestions[idx];
+      if (pick) {
+        onSuggestionSelect(pick);
+      }
+    }
+  };
+
+  return (
+    <>
+      <SearchBar
+        query={query}
+        onQueryChange={onQueryChange}
+        onSearch={onSearch}
+        label={label}
+        placeholder={placeholder}
+        suggestionsListboxId={suggestionsListId}
+        suggestionsOpen={suggestionsOpen}
+        ariaActiveDescendant={activeDescendantId}
+        onInputKeyDown={handleInputKeyDown}
+      />
+
+      <Suggestions
+        id={suggestionsListId}
+        optionIdPrefix={optionIdPrefix}
+        suggestions={visibleSuggestions}
+        highlightedIndex={safeHighlightedIndex}
+        onHighlightChange={setHighlightedIndex}
+        onSelect={onSuggestionSelect}
+        ariaLabel="Email suggestions"
+      />
+    </>
+  );
+}
+
 export function SearchExperience() {
   const [query, setQuery] = useState("");
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<SearchSuggestion | null>(null);
+
   const { suggestions, isLoading, error } = useSearchSuggestions(query);
   const suggestionsListId = useId();
+  const optionIdPrefix = useId();
 
   const hasQuery = query.trim().length > 0;
   const visibleSuggestions = useMemo(
@@ -17,7 +119,11 @@ export function SearchExperience() {
     [hasQuery, suggestions],
   );
 
-  const suggestionsOpen = visibleSuggestions.length > 0;
+  const suggestionSig = useMemo(
+    () => visibleSuggestions.map((s) => s.id).join("|"),
+    [visibleSuggestions],
+  );
+
   const showNoResults =
     hasQuery && !isLoading && !error && visibleSuggestions.length === 0;
 
@@ -38,14 +144,17 @@ export function SearchExperience() {
         keyboard or click to choose a contact.
       </p>
 
-      <SearchBar
+      <SearchBarWithSuggestions
+        key={suggestionSig}
         query={query}
         onQueryChange={handleQueryChange}
         onSearch={setQuery}
         label="Search emails"
         placeholder="Try “Alex” or “@company.com”"
-        suggestionsListboxId={suggestionsListId}
-        suggestionsOpen={suggestionsOpen}
+        suggestionsListId={suggestionsListId}
+        optionIdPrefix={optionIdPrefix}
+        visibleSuggestions={visibleSuggestions}
+        onSuggestionSelect={handleSuggestionSelect}
       />
 
       {isLoading && hasQuery ? (
@@ -67,13 +176,6 @@ export function SearchExperience() {
           No contacts match that search. Try another name or email fragment.
         </p>
       ) : null}
-
-      <Suggestions
-        id={suggestionsListId}
-        suggestions={visibleSuggestions}
-        onSelect={handleSuggestionSelect}
-        ariaLabel="Email suggestions"
-      />
 
       {selectedSuggestion ? (
         <div className="search-experience__selection" role="status" aria-live="polite">

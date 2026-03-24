@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 type SearchBarProps = {
   query: string;
@@ -12,6 +12,10 @@ type SearchBarProps = {
   suggestionsListboxId?: string;
   /** Whether the suggestions list is currently visible. */
   suggestionsOpen?: boolean;
+  /** Id of the highlighted option (for combobox / `aria-activedescendant`). */
+  ariaActiveDescendant?: string;
+  /** Handles keys while the input is focused (e.g. arrows to move in the list). */
+  onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
 };
 
 const DEFAULT_INPUT_ID = "search-input";
@@ -52,11 +56,15 @@ export function SearchBar({
   id = DEFAULT_INPUT_ID,
   suggestionsListboxId,
   suggestionsOpen = false,
+  ariaActiveDescendant,
+  onInputKeyDown,
 }: SearchBarProps) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSearch?.(query.trim());
   };
+
+  const listLinked = Boolean(suggestionsListboxId);
 
   return (
     <form role="search" aria-label={label} className="search-bar" onSubmit={handleSubmit}>
@@ -74,18 +82,25 @@ export function SearchBar({
           value={query}
           placeholder={placeholder}
           onChange={(event) => onQueryChange(event.target.value)}
+          onKeyDown={onInputKeyDown}
           autoComplete="off"
           disabled={disabled}
           aria-controls={suggestionsListboxId}
-          aria-expanded={suggestionsListboxId ? suggestionsOpen : undefined}
-          aria-autocomplete={suggestionsListboxId ? "list" : undefined}
+          aria-expanded={listLinked ? suggestionsOpen : undefined}
+          aria-autocomplete={listLinked ? "list" : undefined}
+          aria-activedescendant={
+            listLinked && suggestionsOpen && ariaActiveDescendant
+              ? ariaActiveDescendant
+              : undefined
+          }
         />
         <button type="submit" className="search-bar__submit" disabled={disabled}>
           Search
         </button>
       </div>
       <p className="search-bar__hint">
-        Press <kbd>Enter</kbd> to search, or pick a suggestion below.
+        Use <kbd>↑</kbd> <kbd>↓</kbd> to move in the list, <kbd>Enter</kbd> to select, or click a
+        row.
       </p>
     </form>
   );

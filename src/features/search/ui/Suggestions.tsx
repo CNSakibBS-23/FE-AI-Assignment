@@ -1,13 +1,11 @@
-import {
-  useCallback,
-  useId,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useId, type KeyboardEvent } from "react";
 import type { SearchSuggestion } from "@/features/search/data/getSearchSuggestions";
 
 type SuggestionsProps = {
   suggestions: SearchSuggestion[];
+  /** Controlled highlight index (must match the value driven by the search input). */
+  highlightedIndex: number;
+  onHighlightChange: (index: number) => void;
   onSelect?: (suggestion: SearchSuggestion) => void;
   /** Accessible name for the listbox (e.g. tied to search input via aria-controls). */
   ariaLabel?: string;
@@ -15,6 +13,8 @@ type SuggestionsProps = {
   labelledBy?: string;
   /** Root element id (for `aria-controls` on the search input). */
   id?: string;
+  /** Prefix for option element ids (must match `aria-activedescendant` on the input). */
+  optionIdPrefix: string;
 };
 
 function getInitials(name: string): string {
@@ -29,40 +29,32 @@ function getInitials(name: string): string {
   return trimmed.slice(0, 2).toUpperCase();
 }
 
-type SuggestionsListInnerProps = {
-  suggestions: SearchSuggestion[];
-  onSelect?: (suggestion: SearchSuggestion) => void;
-  ariaLabel: string;
-  labelledBy?: string;
-  listboxId: string;
-};
-
-function SuggestionsListInner({
+export function Suggestions({
   suggestions,
+  highlightedIndex,
+  onHighlightChange,
   onSelect,
-  ariaLabel,
+  ariaLabel = "Search suggestions",
   labelledBy,
-  listboxId,
-}: SuggestionsListInnerProps) {
-  const baseId = useId();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  id: idProp,
+  optionIdPrefix,
+}: SuggestionsProps) {
+  const reactId = useId();
+  const listboxId = idProp ?? `search-suggestions-${reactId}`;
 
-  const moveHighlight = useCallback(
-    (delta: number) => {
-      if (suggestions.length === 0) return;
-      setSelectedIndex((current) => {
-        const next = current + delta;
-        if (next < 0) return 0;
-        if (next >= suggestions.length) return suggestions.length - 1;
-        return next;
-      });
-    },
-    [suggestions.length],
-  );
+  if (suggestions.length === 0) {
+    return null;
+  }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (suggestions.length === 0) return;
+  const safeIndex = Math.max(0, Math.min(highlightedIndex, suggestions.length - 1));
 
+  const moveHighlight = (delta: number) => {
+    onHighlightChange(
+      Math.max(0, Math.min(safeIndex + delta, suggestions.length - 1)),
+    );
+  };
+
+  const handleListboxKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
@@ -74,12 +66,8 @@ function SuggestionsListInner({
         break;
       case "Enter":
         event.preventDefault();
-        if (
-          selectedIndex >= 0 &&
-          selectedIndex < suggestions.length &&
-          suggestions[selectedIndex]
-        ) {
-          onSelect?.(suggestions[selectedIndex]);
+        if (suggestions[safeIndex]) {
+          onSelect?.(suggestions[safeIndex]);
         }
         break;
       default:
@@ -92,15 +80,15 @@ function SuggestionsListInner({
       <div
         id={listboxId}
         role="listbox"
-        tabIndex={0}
+        tabIndex={-1}
         aria-label={labelledBy ? undefined : ariaLabel}
         aria-labelledby={labelledBy}
-        onKeyDown={handleKeyDown}
+        onKeyDown={handleListboxKeyDown}
         className="search-suggestions"
       >
         {suggestions.map((suggestion, index) => {
-          const optionId = `${baseId}-option-${suggestion.id}`;
-          const isSelected = index === selectedIndex;
+          const optionId = `${optionIdPrefix}-opt-${suggestion.id}`;
+          const isSelected = index === safeIndex;
 
           return (
             <div
@@ -113,7 +101,7 @@ function SuggestionsListInner({
                   ? "search-suggestions__option is-active"
                   : "search-suggestions__option"
               }
-              onMouseEnter={() => setSelectedIndex(index)}
+              onMouseEnter={() => onHighlightChange(index)}
               onMouseDown={(e) => {
                 e.preventDefault();
                 onSelect?.(suggestion);
@@ -135,32 +123,5 @@ function SuggestionsListInner({
         </p>
       </div>
     </div>
-  );
-}
-
-export function Suggestions({
-  suggestions,
-  onSelect,
-  ariaLabel = "Search suggestions",
-  labelledBy,
-  id: idProp,
-}: SuggestionsProps) {
-  const reactId = useId();
-  const listboxId = idProp ?? `search-suggestions-${reactId}`;
-  const listKey = suggestions.map((s) => s.id).join("|");
-
-  if (suggestions.length === 0) {
-    return null;
-  }
-
-  return (
-    <SuggestionsListInner
-      key={listKey}
-      suggestions={suggestions}
-      onSelect={onSelect}
-      ariaLabel={ariaLabel}
-      labelledBy={labelledBy}
-      listboxId={listboxId}
-    />
   );
 }
