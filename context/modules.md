@@ -1,5 +1,7 @@
 # Modules
 
+> **Scope:** This map includes **roadmap** modules. Only **`search`** and **`email`** are implemented under `src/features` in this assignment; see [`scope.md`](./scope.md).
+
 ## Module Map
 
 Primary feature modules:

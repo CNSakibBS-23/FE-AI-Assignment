@@ -1,5 +1,7 @@
 # Frontend Architecture
 
+> **Scope:** What ships in this repo is summarized in [`scope.md`](./scope.md) (feature set and intentional differences from full ADRs).
+
 ## Overview
 
 This frontend uses a feature-based modular architecture with strict layering:

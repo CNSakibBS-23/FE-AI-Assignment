@@ -70,6 +70,11 @@ The app is structured for clarity and scalability: each capability lives under `
 
 Tests live next to source under `src/**/*.test.{ts,tsx}` and use **Vitest** with **jsdom** and **Testing Library**. Shared setup is in `src/test/setup.ts`.
 
+| Constant | Value | Source |
+| -------- | ----- | ------ |
+| Search suggestions debounce | **300 ms** | `SEARCH_SUGGESTIONS_DEBOUNCE_MS` in `useSearchSuggestions.ts` |
+| Search history max entries | **5** | `SEARCH_HISTORY_MAX` in `searchHistory.ts` |
+
 ```bash
 # Single run (CI-style)
 npm run test
@@ -77,9 +82,11 @@ npm run test
 # Watch mode during development
 npm run test:watch
 
-# Coverage report (v8), output under `./coverage`
+# Coverage report (v8): HTML under `./coverage`, plus `lcov.info` for tooling
 npm run test:coverage
 ```
+
+Open `coverage/index.html` in a browser after a coverage run. The `coverage/` directory is gitignored; generate it locally or download the **coverage-report** artifact from GitHub Actions after a successful CI run.
 
 ### End-to-end tests (Playwright)
 
@@ -102,8 +109,31 @@ Ensure Playwright browsers are installed (`npx playwright install`) before the f
 
 - **[EXPERIENCE.md](./EXPERIENCE.md)** — Project retrospective: what worked, what did not, challenges, learnings, and suggestions.
 - **[AI_USAGE.md](./AI_USAGE.md)** — How Cursor was used for this assignment, prompt strategy, skills/MCP/context, and observations.
+- **`context/`** — Architecture, modules, workflows, decisions, MCP notes, and **[`context/scope.md`](./context/scope.md)** (what is implemented vs roadmap).
 
 For module boundaries and layering (UI → logic → data), see `context/architecture.md` and `context/modules.md`.
+
+## Submission checklist (course / assignment)
+
+Use this when packaging the deliverable:
+
+| Requirement | Where it lives |
+| ------------- | -------------- |
+| Clean codebase + setup | This **README**, `package.json` scripts |
+| **`context/`** documentation | `context/` (start with **`scope.md`** for ground truth) |
+| Experience report | **[EXPERIENCE.md](./EXPERIENCE.md)** |
+| AI tool usage report | **[AI_USAGE.md](./AI_USAGE.md)** |
+| Tests passing + coverage | `npm run test`, `npm run test:coverage` → `coverage/` (HTML + `lcov.info`) |
+| Test automation | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — lint, build, unit tests, coverage artifact, Playwright E2E |
+| AI chat logs (export) | See **below** |
+
+### Exporting AI chat logs (Cursor)
+
+1. **Per conversation:** In the Cursor chat panel, use the conversation menu (e.g. **⋯** or chat title) and **Export** / copy if your Cursor version offers it.
+2. **Project transcripts folder:** Cursor stores session transcripts under your user profile, e.g.  
+   `C:\Users\<you>\.cursor\projects\<project-folder>\agent-transcripts\`  
+   Copy relevant `.jsonl` files into a `chat-logs/` folder in the repo (or zip them) for submission—**redact** any secrets, tokens, or personal data first.
+3. Optionally add a one-line **`chat-logs/README.txt`** listing filenames and dates so reviewers can navigate exports quickly.
 
 ## Project structure (high level)
 

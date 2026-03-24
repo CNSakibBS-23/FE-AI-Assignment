@@ -105,8 +105,8 @@ When the stack or scope changes, **update architecture and workflow docs** in th
 
 ### Short term (assignment polish)
 
-1. **Align `context/` with reality** — Either trim roadmap-only sections or label them “Planned / not implemented” so reviewers map docs to folders without confusion.
-2. **Add a minimal CI recipe** — One pipeline running `npm run lint`, `npm run build`, `npm run test`, and optionally `npm run test:e2e` (with Playwright install cached) proves reproducibility.
+1. **Align `context/` with reality** — Addressed via **`context/scope.md`** and pointers from `architecture.md` / `modules.md`; roadmap-only items remain labeled there.
+2. **CI** — GitHub Actions (`.github/workflows/ci.yml`) runs `lint`, `build`, `test`, `test:coverage` (artifact upload), and Playwright E2E.
 3. **Document debounce timings** — A single table (debounce ms, history max length) in the README helps QA and E2E authors tune waits.
 
 ### Medium term (if this grows into a real product)
