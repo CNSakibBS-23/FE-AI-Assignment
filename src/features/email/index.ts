@@ -3,3 +3,7 @@ export { getEmails } from "./data/getEmails";
 export { MOCK_EMAILS } from "./data/mockEmails";
 export { useEmails } from "./logic/useEmails";
 export type { UseEmailsResult } from "./logic/useEmails";
+export { EmailItem } from "./ui/EmailItem";
+export type { EmailItemProps } from "./ui/EmailItem";
+export { EmailList } from "./ui/EmailList";
+export type { EmailListProps } from "./ui/EmailList";
