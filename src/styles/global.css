@@ -61,3 +61,18 @@ body {
   font-size: 0.875rem;
   color: #64748b;
 }
+
+.search-experience {
+  width: min(32rem, 100%);
+}
+
+.search-experience__status,
+.search-experience__error,
+.search-experience__selection {
+  margin: 0.5rem 0 0;
+  text-align: left;
+}
+
+.search-experience__error {
+  color: #b91c1c;
+}
