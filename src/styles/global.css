@@ -22,3 +22,42 @@ body {
   padding: 2rem;
   text-align: center;
 }
+
+.search-suggestions {
+  margin-top: 0.25rem;
+  max-width: 28rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  background: #fff;
+  outline: none;
+}
+
+.search-suggestions:focus-visible {
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
+.search-suggestions__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-suggestions__option:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-suggestions__option.is-active {
+  background-color: #e0e7ff;
+}
+
+.search-suggestions__name {
+  font-weight: 600;
+}
+
+.search-suggestions__email {
+  font-size: 0.875rem;
+  color: #64748b;
+}
